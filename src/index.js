@@ -16,7 +16,7 @@ let myApp = module({
 	},
 	methods: {
 		changeStr: function() {
-			this.setData("string", "new string");
+			this.string = "new string";
 		},
 	}
 })

@@ -1,3 +1,70 @@
+class Element {
+	constructor(tagName, props={}, children=[]) {
+		this.tagName = tagName;
+		this.props = props;
+		this.children = children;
+
+		this._init();
+	}
+	_init() {
+		this.node = document.createElement(this.tagName);
+		this.addChildren(this.children);
+	}
+	addChildren(children=[]) {
+		let node = this.node;
+
+		for (let child of children) {
+			let childEl;
+
+			if (child instanceof Element) {
+				childEl = child.node;
+			} else {
+				childEl = document.createTextNode(child);
+			}
+
+			node.appendChild(childEl);
+		}
+
+		this.children = this.children.concat(children);
+	}
+	static diff(oldEl, newEl) {
+		const patches = [];
+		dfsWalk(oldEl, newEl, patches);
+		console.log(patches);
+		return patches;
+	}
+	static update(patches) {
+		for (let patch of patches) {
+			switch(patch.type) {
+				case 'node.replace':
+					patch.oldEl.node.replaceWith(patch.newEl.node);
+					break;
+				case 'props.remove':
+					patch.el.node.removeAttribute(patch.propKey);
+					break;
+				case 'props.update':
+					patch.el.node.setAttribute(patch.propKey, patch.propValue);
+					break;
+				case 'child.update':
+					const childNode = (typeof patch.child === 'string') ? patch.child : patch.child.node;
+					patch.el.node.childNodes[patch.childIndex].replaceWith(childNode);
+					break;
+				case 'child.remove':
+					patch.el.node.childNodes[patch.childIndex].remove();
+					break;
+				case 'child.add':
+					const parent = patch.el.node;
+					const referenceNode = parent.childNodes[patch.childIndex];
+					const newNode = (typeof patch.child === 'string') ? document.createTextNode(patch.child) : patch.child.node;
+					parent.insertBefore(newNode, referenceNode);
+					break;
+			}
+		}
+	}
+}
+
+export default Element;
+
 function dfsWalk(oldEl, newEl, patches) {
 	if (diffTagName(oldEl, newEl, patches)) {
 		return true;
@@ -122,70 +189,3 @@ function diffChildren(oldEl, newEl, patches) {
 
 	return res;
 }
-
-class Element {
-	constructor(tagName, props={}, children=[]) {
-		this.tagName = tagName;
-		this.props = props;
-		this.children = children;
-
-		this._init();
-	}
-	_init() {
-		this.node = document.createElement(this.tagName);
-		this.addChildren(this.children);
-	}
-	addChildren(children=[]) {
-		let node = this.node;
-
-		for (let child of children) {
-			let childEl;
-
-			if (child instanceof Element) {
-				childEl = child.node;
-			} else {
-				childEl = document.createTextNode(child);
-			}
-
-			node.appendChild(childEl);
-		}
-
-		this.children = this.children.concat(children);
-	}
-	static diff(oldEl, newEl) {
-		const patches = [];
-		dfsWalk(oldEl, newEl, patches);
-		console.log(patches);
-		return patches;
-	}
-	static update(patches) {
-		for (let patch of patches) {
-			switch(patch.type) {
-				case 'node.replace':
-					patch.oldEl.node.replaceWith(patch.newEl.node);
-					break;
-				case 'props.remove':
-					patch.el.node.removeAttribute(patch.propKey);
-					break;
-				case 'props.update':
-					patch.el.node.setAttribute(patch.propKey, patch.propValue);
-					break;
-				case 'child.update':
-					const childNode = (typeof patch.child === 'string') ? patch.child : patch.child.node;
-					patch.el.node.childNodes[patch.childIndex].replaceWith(childNode);
-					break;
-				case 'child.remove':
-					patch.el.node.childNodes[patch.childIndex].remove();
-					break;
-				case 'child.add':
-					const parent = patch.el.node;
-					const referenceNode = parent.childNodes[patch.childIndex];
-					const newNode = (typeof patch.child === 'string') ? document.createTextNode(patch.child) : patch.child.node;
-					parent.insertBefore(newNode, referenceNode);
-					break;
-			}
-		}
-	}
-}
-
-export default Element;
