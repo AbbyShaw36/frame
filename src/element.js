@@ -1,23 +1,36 @@
 class Element {
-	constructor(tagName, props={}, children=[]) {
+	constructor({tagName, props={}, children=[], events=[]}) {
 		this.tagName = tagName;
 		this.props = props;
 		this.children = children;
-
-		this._init();
+		this.events = events;
 	}
-	_init() {
+	render() {
 		this.node = document.createElement(this.tagName);
-		this.addChildren(this.children);
+		this._setProps();
+		this._setChildren();
+		this._setEvents();
+
+		return this.node;
 	}
-	addChildren(children=[]) {
+	_setProps() {
 		let node = this.node;
+		let props = this.props;
+
+		for (let propKey in props) {
+			const propValue = props[propKey];
+			node.setAttribute(propKey, propValue);
+		}
+	}
+	_setChildren() {
+		let node = this.node;
+		let children = this.children;
 
 		for (let child of children) {
 			let childEl;
 
 			if (child instanceof Element) {
-				childEl = child.node;
+				childEl = child.render();
 			} else {
 				childEl = document.createTextNode(child);
 			}
@@ -25,6 +38,22 @@ class Element {
 			node.appendChild(childEl);
 		}
 
+		this.children = this.children.concat(children);
+	}
+	_setEvents() {
+		let node = this.node;
+		let events = this.events;
+
+		for (let type in events) {
+			const handler = events[type];
+
+			node.addEventListener(type, handler);
+		}
+	}
+	addProps(props) {
+		Object.assign(this.props, props);
+	}
+	addChildren(children) {
 		this.children = this.children.concat(children);
 	}
 	static diff(oldEl, newEl) {

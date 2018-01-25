@@ -1,5 +1,22 @@
-import El from './element';
+import Element from './element';
 import Watcher from './watcher';
+
+class El extends Element {
+	constructor({tagName, props={}, children=[], events=[], model}) {
+		super({tagName, props, children, events});
+		this.model = model;
+	}
+	render() {
+		const node = super.render();
+		const model = this.model;
+
+		if (model) {
+			model.setter(node);
+		}
+
+		return node;
+	}
+}
 
 class Module {
 	constructor({selector, template, data, methods}) {
@@ -63,7 +80,7 @@ class Module {
 			// 文本内容
 			if (!isTag) {
 				const parentEl = elList[elList.length - 1];
-				const index = parentEl.node.childNodes.length;
+				const index = parentEl.children.length;
 
 				str = str.replace(/{{(.*)}}/g, function(match, value) {
 					watcher.subscribe(value, () => {
@@ -88,6 +105,7 @@ class Module {
 			const tagName = tag.shift();
 			const props = {};
 			const events = {};
+			const model = null;
 			const hasEndTag = isEndTag(tag[tag.length - 1]);
 
 			// 针对自闭和标签，例如：<input />
@@ -109,7 +127,29 @@ class Module {
 					const eventType = propName.replace(/@/, '');
 					const eventHandler = propValue.replace(/{|}|"|'/g, '');
 
-					events[eventType] = eventHandler;
+					if (eventType === 'model') {
+						model = {
+							key: eventHandler,
+							setter: function(node) {
+								const modelKey = this.key;
+								let handler = function(value) {
+									const data = this;
+									data[modelKey] = value;
+								}.bind(watcher.getData());
+								
+								node.value = data[modelKey];
+								node.addEventListener("input", function() {
+									const newValue = this.value;
+									handler(newValue);
+								});
+								watcher.subscribe(modelKey, () => {
+									node.value = data[modelKey];
+								});
+							}
+						};
+					} else {
+						events[eventType] = methods[eventHandler];
+					}
 				} else {
 					props[propName] = propValue;
 				}
@@ -118,32 +158,7 @@ class Module {
 			console.log(events);
 			console.log(props);
 
-			const newEl = new El(tagName, props);
-
-			if (events['model']) {
-				const dataKey = events['model'];
-				const node = newEl.node;
-				let handler = function(value) { this[dataKey] = value; }
-
-				handler = handler.bind(watcher.getData());
-
-				delete events.model;
-				node.value = data[dataKey];
-				node.addEventListener("input", function() {
-					handler(this.value);
-				});
-				watcher.subscribe(dataKey, () => {
-					node.value = data[dataKey];
-				});
-			}
-
-			// 绑定事件
-			for (let type in events) {
-				const node = newEl.node;
-				const value = events[type];
-
-				node.addEventListener(type, methods[value]);
-			}
+			const newEl = new El({tagName, props, events, model});
 
 			elList.push(newEl);
 
@@ -166,7 +181,7 @@ class Module {
 		if (isFirstLoad) {
 			// 渲染到页面上
 			parent.innerHTML = "";
-			parent.appendChild(newElem.node);
+			parent.appendChild(newElem.render());
 			_this.elem = newElem;
 			return;
 		}
