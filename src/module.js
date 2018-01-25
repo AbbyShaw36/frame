@@ -1,4 +1,5 @@
 import El from './element';
+import Watcher from './watcher';
 
 class Module {
 	constructor({selector, template, data, methods}) {
@@ -6,8 +7,7 @@ class Module {
 		this.data = data;
 		this.template = template;
 		this.methods = methods;
-		this._context = {};
-		this._dataListener = {};
+		this.watcher = new Watcher(data);
 
 		this._init();
 	}
@@ -15,30 +15,11 @@ class Module {
 		const _this = this;
 		const data = _this.data;
 		const methods = _this.methods;
-		const context = _this._context;
-
-		for (let key in data) {
-			Object.defineProperty(context, key, {
-				set: function(value) {
-					const handlerArr = _this._dataListener[key];
-
-					data[key] = value;
-
-					if (handlerArr) {
-						handlerArr.forEach(function(handler) {
-							handler();
-						});
-					}
-				},
-				get: function() {
-					return data[key];
-				}
-			})
-		}
+		const watcher = _this.watcher;
 
 		// 方法重定向
 		for (let key in methods) {
-			methods[key] = methods[key].bind(context);
+			methods[key] = methods[key].bind(watcher.getData());
 		}
 
 		_this.updateView();
@@ -48,6 +29,7 @@ class Module {
 		const data = _this.data;
 		const methods = _this.methods;
 		const template = _this.template;
+		const watcher = _this.watcher;
 		const temp = template
 			.replace(/\n/g, '')
 			.replace(/(\s*<)|(>\s*)/g, function(match) {
@@ -84,7 +66,7 @@ class Module {
 				const index = parentEl.node.childNodes.length;
 
 				str = str.replace(/{{(.*)}}/g, function(match, value) {
-					_this.watchData(value, () => {
+					watcher.subscribe(value, () => {
 						parentEl.node.childNodes[index].replaceWith(data[value]);
 					});
 					return data[value];
@@ -138,22 +120,29 @@ class Module {
 
 			const newEl = new El(tagName, props);
 
+			if (events['model']) {
+				const dataKey = events['model'];
+				const node = newEl.node;
+				let handler = function(value) { this[dataKey] = value; }
+
+				handler = handler.bind(watcher.getData());
+
+				delete events.model;
+				node.value = data[dataKey];
+				node.addEventListener("input", function() {
+					handler(this.value);
+				});
+				watcher.subscribe(dataKey, () => {
+					node.value = data[dataKey];
+				});
+			}
+
 			// 绑定事件
 			for (let type in events) {
 				const node = newEl.node;
 				const value = events[type];
 
-				if (type === "model") {
-					node.value = data[value];
-					node.addEventListener("input", function() {
-						_this.setData(value, this.value);
-					});
-					_this.watchData(value, () => {
-						node.value = data[value];
-					});
-				} else {
-					node.addEventListener(type, methods[value]);
-				}
+				node.addEventListener(type, methods[value]);
 			}
 
 			elList.push(newEl);
@@ -164,23 +153,6 @@ class Module {
 		}
 
 		return elList.pop();
-	}
-	watchData(dataKey, handler) {
-		const _this = this;
-		const lib = _this._dataListener;
-		const handlerArr = lib[dataKey];
-
-		if (handlerArr) {
-			handlerArr.push(handler);
-		} else {
-			lib[dataKey] = [handler];
-		}
-	}
-	setData(dataKey, newValue) {
-		const _this = this;
-		const context = _this._context;
-
-		context[dataKey] = newValue;
 	}
 	updateView() {
 		const _this = this;
