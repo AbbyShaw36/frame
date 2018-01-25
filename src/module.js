@@ -1,4 +1,4 @@
-import el from './element';
+import El from './element';
 
 function isEndTag(tag) {
 	return tag && tag[0] === '/';
@@ -87,7 +87,7 @@ class Module {
 				tag.pop();
 			}
 
-			// 创建 el 对象
+			// 创建 El 对象
 			for (let item of tag) {
 				const prop = item.split('=');
 				const propName = prop[0];
@@ -110,7 +110,7 @@ class Module {
 
 			console.log(events);
 
-			const newEl = new el(tagName, props);
+			const newEl = new El(tagName, props);
 
 			// 绑定事件
 			for (let type in events) {
@@ -118,16 +118,12 @@ class Module {
 				const value = events[type];
 
 				if (type === "model") {
-					let timer = null;
-
+					console.log("change model value: ", data[value]);
 					node.value = data[value];
-					node.addEventListener("keyup", function() {
+					node.addEventListener("input", function() {
 						const newValue = this.value;
-						timer && clearTimeout(timer);
 
-						timer = setTimeout(function() {
-							_this.setData(value, newValue);
-						}, 20);
+						_this.setData(value, newValue);
 					});
 				} else {
 					node.addEventListener(type, methods[value]);
@@ -141,7 +137,7 @@ class Module {
 			}
 		}
 
-		_this.elem = elList.pop();
+		return elList.pop();
 	}
 	listenData(name) {
 		const _this = this;
@@ -165,18 +161,19 @@ class Module {
 		const isFirstLoad = oldElem === void 0;
 
 		// 模板转节点
-		_this.tmpToElem();
-		const newElem = _this.elem;
-
-		console.log(oldElem, newElem, oldElem === newElem);
+		const newElem =_this.tmpToElem();
 
 		if (isFirstLoad) {
-
 			// 渲染到页面上
 			parent.innerHTML = "";
 			parent.appendChild(newElem.node);
+			_this.elem = newElem;
 			return;
 		}
+
+		console.log(oldElem, newElem);
+		const patches = El.diff(oldElem, newElem);
+		El.update(patches);
 	}
 }
 
