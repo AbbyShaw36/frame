@@ -66,7 +66,7 @@ class Element {
 		for (let patch of patches) {
 			switch(patch.type) {
 				case 'node.replace':
-					patch.oldEl.node.replaceWith(patch.newEl.node);
+					patch.oldEl.node.replaceWith(patch.newEl.render());
 					break;
 				case 'props.remove':
 					patch.el.node.removeAttribute(patch.propKey);
@@ -84,7 +84,7 @@ class Element {
 				case 'child.add':
 					const parent = patch.el.node;
 					const referenceNode = parent.childNodes[patch.childIndex];
-					const newNode = (typeof patch.child === 'string') ? document.createTextNode(patch.child) : patch.child.node;
+					const newNode = (typeof patch.child === 'string') ? document.createTextNode(patch.child) : patch.child.render();
 					parent.insertBefore(newNode, referenceNode);
 					break;
 			}
