@@ -1,22 +1,23 @@
-import module from './module';
+import module from "./frame/module";
 
-let myApp = module({
+let newCmp = new module({
 	selector: '#app',
 	template: `
 		<div>
-			<h1>Title</h1>
-			<p>{{string}}</p>
-			<input type="text" @model="{{string}}" />
-			<br />
-			<button @click="{{changeStr}}">test</button>
+			<div>my module content: {{str1}}, {{str2}}</div>
+			<div><input type="text" @model="{{str1}}" /></div>
+			<div><input type="text" @model="{{str2}}" /></div>
+			<button @click="{{updateText}}">test</button>
 		</div>
 	`,
 	data: {
-		string: 'test string',
+		str1: 'abc',
+		str2: 'test'
 	},
 	methods: {
-		changeStr: function() {
-			this.string = "new string";
-		},
+		updateText: function() {
+			this.str1 = 'aaa';
+			console.log(this);
+		}
 	}
-})
+});
