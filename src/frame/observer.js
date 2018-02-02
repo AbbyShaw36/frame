@@ -1,5 +1,21 @@
 import Dep from "./dependency";
 
+const resetArrayProto = (arr, dep) => {
+	const methods = ['push', 'pop', 'shift', 'unshift', 'splice', 'sort', 'reverse'];
+
+	methods.forEach((method) => {
+		const original = arr.__proto__[method];
+		const newFn = function() {
+			dep.notify();
+			return original.apply(this, arguments);
+		}
+
+		Object.defineProperty(arr, method, {
+			value: newFn
+		})
+	});
+}
+
 function observe(data) {
 	if (!data || typeof data !== 'object') {
 		return;
@@ -10,14 +26,18 @@ function observe(data) {
 
 class Observer {
 	constructor(data, key) {
-		this.value = data[key];
+		const value = this.value = data[key];
+		const dep = this.dep = new Dep();
 
-		observe(this.value);
-
+		observe(value);
 		this.defineReactive(data, key);
+
+		if (Array.isArray(value)) {
+			resetArrayProto(value, dep);
+		}
 	}
 	defineReactive(data, key) {
-		const dep = new Dep();
+		const dep = this.dep;
 		const _self = this;
 
 		Object.defineProperty(data, key, {

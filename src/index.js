@@ -24,9 +24,9 @@ let newCmp = new module({
 	},
 	methods: {
 		updateText: function() {
-			this.list[0] = {
+			this.list.push({
 				name: "abc"
-			};
+			});
 			console.log(this);
 		}
 	}
