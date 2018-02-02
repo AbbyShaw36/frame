@@ -3,19 +3,20 @@ class Watcher {
 		this.vm = vm;
 		this.key = key;
 		this.cb = cb;
+		this.depList = {};
 	}
 	addDep(dep) {
-		if (this.dep) {
+		if (this.depList[dep.id]) {
 			return;
 		}
 
-		this.dep = dep;
+		this.depList[dep.id] = dep;
 		dep.addSub(this);
 	}
 	update() {
 		const context = this.vm;
 		const oldValue = this.value;
-		const newValue = this.vm[this.key];
+		const newValue = this.vm.getter(this.key);
 		const cb = this.cb.bind(context, newValue, oldValue);
 
 		cb();

@@ -22,6 +22,28 @@ class Component {
 			set: (newValue) => this._data[key] = newValue
 		});
 	}
+	getter(exp) {
+		const expArr = exp.split(".");
+		let res = this;
+
+		while(res && expArr.length) {
+			res = res[expArr.shift()];
+		}
+
+		return res;
+	}
+	setter(exp, value) {
+		const expArr = exp.split(".");
+		let res = this;
+
+		while(res && expArr.length - 1) {
+			res = res[expArr.shift()];
+		}
+
+		if (res) {
+			res[expArr.shift()] = value;
+		}
+	}
 	render($parent) {
 		const parentNode = this.$parent = $parent;
 		const template = this.$options.template;
@@ -32,14 +54,23 @@ class Component {
 		console.log($el);
 	}
 	update() {
-		const parentNode = this.$parent;
-		const template = this.$options.template;
-		const oldEl = this.$el;
-		const newEl = templateCompiler(template);
+		if (this.updateTimer) {
+			clearTimeout(this.updateTimer);
+		}
 
-		newEl.compiler(this, true);
-		console.log(oldEl, newEl);
-		updateEl(diffEl(oldEl, newEl));
+		this.updateTimer = setTimeout(() => {
+			const parentNode = this.$parent;
+			const template = this.$options.template;
+			const oldEl = this.$el;
+			const newEl = templateCompiler(template);
+
+			newEl.compiler(this, true);
+			console.log(oldEl, newEl);
+			updateEl(diffEl(oldEl, newEl));
+
+			this.updateTimer = null;
+		}, 200);
+		
 	}
 }
 

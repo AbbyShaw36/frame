@@ -34,12 +34,14 @@ const templateCompiler = (template) => {
 	// 循环处理标签
 	for (let str of strings) {
 		const isText = str !== '';
-		const tagAttrs = tags.shift().replace(/<|>/g, '').split(' ');
-		const tagName = tagAttrs.shift();
-		const hasEndTag = isEndTag(tagAttrs[tagAttrs.length - 1]);
+		const tag = tags.shift().replace(/<|>/g, '');
+		const tagAttrs = (tag.match(/\s+([^"]+)="([^"]+)"/g) || []).map((value) => value.trim());
+		const tagName = tag.split(' ')[0];
+		const hasEndTag = isEndTag(tag.split(' ').pop());
 		const attrs = {};
 		const events = {};
 		const model = null;
+		let cycle;
 
 		if (isText) {
 			const parentEl = elList[elList.length - 1];
@@ -69,19 +71,23 @@ const templateCompiler = (template) => {
 				const type = attrName.replace(/@/, '');
 				const value = attrValue.replace(/"|'/g, '');
 
-				if (type === 'model') {
-					model = {
-						key: value
-					};
-				} else {
-					events[type] = value;
+				switch(type) {
+					case 'model':
+						model = { key: value };
+						break;
+					case 'for':
+						cycle = value;
+						break;
+					default:
+						events[type] = value;
+						break;
 				}
 			} else {
 				attrs[attrName] = attrValue;
 			}
 		}
 
-		const newEl = new El({tagName, attrs, events, model});
+		const newEl = new El({tagName, attrs, events, model, cycle});
 
 		console.log(tagName, attrs, events, model);
 		elList.push(newEl);

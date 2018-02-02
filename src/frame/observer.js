@@ -12,6 +12,8 @@ class Observer {
 	constructor(data, key) {
 		this.value = data[key];
 
+		observe(this.value);
+
 		this.defineReactive(data, key);
 	}
 	defineReactive(data, key) {
@@ -24,13 +26,14 @@ class Observer {
 				const watcher = Dep.target;
 
 				if (watcher) {
+					console.log(watcher, key, dep);
 					watcher.addDep(dep);
 				}
 
 				return _self.value;
 			},
 			set: (newValue) => {
-				console.log('value changed: ', _self.value, ' => ', newValue);
+				console.log('value changed: ', _self.value, ' => ', newValue, data, dep);
 				_self.value = newValue;
 				dep.notify();
 			}
