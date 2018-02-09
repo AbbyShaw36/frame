@@ -1,114 +1,31 @@
 import Element from './element';
 import Watcher from './watcher';
 import Dep from './dependency';
+import Component from './component';
 
 class El extends Element {
-	constructor({tagName, attrs={}, children=[], events={}, model, cycle}) {
+	constructor({tagName, attrs={}, children=[], events={}, model}) {
 		super({tagName, attrs, children, events});
 		this.model = model;
-		this.cycle = cycle;
 	}
 	render() {
-		const node = super.render();
 		const model = this.model;
 
-		if (model) {
-			model.setter(node);
-		}
+		this.children = this.children.map((child) => {
+			if (child instanceof Component) {
+				return child.render();
+			}
 
-		return node;
-	}
-	compiler(vm, isClone) {
-		const el = this;
-		const attrs = this.attrs;
-		const children = this.children;
-		const events = this.events;
-		const model = this.model;
-		const regexp = /{{([^{}]*)}}/g;
+			return child;
+		});
 
-		for (let attrKey in attrs) {
-			attrs[attrKey] = attrs[attrKey].replace(regexp, (match, value, offset, string) => {
-				if (!isClone) {
-					Dep.target = new Watcher(vm, value, function(newValue) {
-						vm.update();
-					});
-				}
-				return vm.getter(value);
-			});
-		}
-
-		for (let eventType in events) {
-			const eventHandlerName = events[eventType].replace(regexp, (match, value) => value);
-			events[eventType] = vm.getter(eventHandlerName);
-		}
+		super.render();
 
 		if (model) {
-			model.setter = function(node) {
-				const modelKey = this.key.replace(regexp, (match, value) => value);
-
-				if (!isClone) {
-					Dep.target = new Watcher(vm, modelKey, function(newValue) {
-						vm.update();
-						node.value = vm.getter(modelKey);
-					});
-				}
-				node.value = vm.getter(modelKey);
-				node.addEventListener("input", function(event) {
-					vm.setter(modelKey, event.target.value);
-				});
-				console.log(node.value);
-			}
+			model.setter(this.node);
 		}
 
-		for (let i=0, len=children.length; i < len; i++) {
-			const child = children[i];
-
-			console.log(child);
-
-			if (child instanceof El) {
-				if (child.cycle) {
-					const key = child.cycle.split(" in ")[0];
-					const list = child.cycle.split(" in ")[1];
-					const fnStr = `
-						const arr = [];
-
-						for(let ${child.cycle}) {
-							const newEl = el.clone();
-
-							newEl.replaceKey('${key}', '${list}.'+item);
-							arr.push(newEl);
-						}
-
-						return arr;
-					`;
-					console.log(fnStr);
-
-					const fn = new Function('el', 'list', fnStr);
-
-					const childList = fn(child, vm.getter(list));
-
-					childList.forEach((child) => {
-						child.compiler(vm, isClone);
-					});
-
-					children.splice(i, 1, ...childList);
-					children[i].compiler(vm, isClone);
-				} else {
-					child.compiler(vm, isClone);
-				}
-			} else {
-				children[i] = child.replace(regexp, (match, value, offset, string) => {
-					if (!isClone) {
-						Dep.target = new Watcher(vm, value, function(newValue) {
-							vm.update();
-						});
-					}
-					return vm.getter(value);
-				});
-			}
-		}
-
-		this.vm = vm;
+		return this.node;
 	}
 	clone() {
 		const new_tagName = this.tagName;
@@ -157,6 +74,7 @@ class El extends Element {
 		});
 	}
 	replaceKey(oldKey, newKey) {
+		console.log(this, `replace key ${oldKey} to ${newKey}`);
 		const attrs = this.attrs;
 		const children = this.children;
 		const events = this.events;
@@ -186,6 +104,23 @@ class El extends Element {
 
 		if (model) {
 			model.key = model.key.replace(regexp, replacer);
+		}
+	}
+	addKeyContext(oldKey, newKey) {
+		const context = this.keyContext = this.keyContext || [];
+
+		context.push({oldKey, newKey});
+	}
+	addChildren(children) {
+		super.addChildren(children);
+
+		const keyContext = this.keyContext;
+		console.log(keyContext);
+
+		if (keyContext) {
+			keyContext.forEach(({oldKey, newKey}) => {
+				this.replaceKey(oldKey, newKey);
+			});
 		}
 	}
 }

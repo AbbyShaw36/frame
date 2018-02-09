@@ -28,9 +28,12 @@ class Element {
 
 		for (let child of children) {
 			let childEl;
+				console.log("child", child);
 
 			if (child instanceof Element) {
 				childEl = child.render();
+			} else if (child instanceof HTMLElement) {
+				childEl = child;
 			} else {
 				childEl = document.createTextNode(child);
 			}

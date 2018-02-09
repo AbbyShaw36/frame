@@ -1,33 +1,31 @@
-import module from "./frame/module";
+import F from './frame';
 
-let newCmp = new module({
+F.component('myList', {
+	template: `
+		<ul>
+			<li @for="item in list">{{item.value}}</li>
+		</ul>
+	`,
+	data: {},
+	methods: {},
+	props: []
+});
+
+const myApp = new F({
 	selector: '#app',
 	template: `
 		<div>
-			<div>my module content: {{str1}}, {{str2}}</div>
-			<div><input type="text" @model="{{str1}}" /></div>
-			<div><input type="text" @model="{{str2}}" /></div>
-			<button @click="{{updateText}}">test</button>
-			<ul>
-				<li @for="item in list">{{item.name}}</li>
-			</ul>
+			<myList list="{{list}}"></myList>
 		</div>
 	`,
 	data: {
-		str1: 'abc',
-		str2: 'test',
 		list: [{
-			name: "aaa"
+			value: 1
 		}, {
-			name: "bbb"
+			value: 2
+		}, {
+			value: 3
 		}]
 	},
-	methods: {
-		updateText: function() {
-			this.list.push({
-				name: "abc"
-			});
-			console.log(this);
-		}
-	}
-});
+	methods: {}
+})

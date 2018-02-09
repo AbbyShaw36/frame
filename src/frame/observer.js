@@ -1,6 +1,7 @@
 import Dep from "./dependency";
 
 const resetArrayProto = (arr, dep) => {
+	console.log(arr, 'add array prototype');
 	const methods = ['push', 'pop', 'shift', 'unshift', 'splice', 'sort', 'reverse'];
 
 	methods.forEach((method) => {
@@ -12,7 +13,7 @@ const resetArrayProto = (arr, dep) => {
 
 		Object.defineProperty(arr, method, {
 			value: newFn
-		})
+		});
 	});
 }
 
