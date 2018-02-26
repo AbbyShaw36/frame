@@ -1,7 +1,7 @@
 import Dep from "./dependency";
 
 const resetArrayProto = (arr, dep) => {
-	console.log(arr, 'add array prototype');
+	console.log("add array prototype", arr);
 	const methods = ['push', 'pop', 'shift', 'unshift', 'splice', 'sort', 'reverse'];
 
 	methods.forEach((method) => {

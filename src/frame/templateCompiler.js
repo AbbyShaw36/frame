@@ -16,8 +16,7 @@ const getTemplateElement = (template) => {
 
 	// 删除最后一个无意义空字符串
 	strings.pop();
-	console.log(tags);
-	console.log(strings);
+	console.log("split template element result:", tags, strings);
 
 	return {tags, strings};
 }
@@ -28,10 +27,10 @@ class ElStack {
 	}
 	push(el) {
 		this.stack.push(el);
-		console.log('push', el);
+		console.log('push element', el);
 	}
 	pop() {
-		console.log('pop', this.top());
+		console.log('pop element', this.top());
 		return this.stack.pop();
 	}
 	top() {
@@ -105,7 +104,7 @@ const templateCompiler = (template) => {
 			const attrValue = attr[1].replace(/"|'/g, '');
 			const isEvent = /^@/.test(attrName);
 
-			console.log(attrName, attrValue);
+			console.log("tag attribute", attrName, attrValue);
 
 			if (isEvent) {
 				const eventType = attrName.replace(/@/, '');
@@ -141,6 +140,7 @@ const templateCompiler = (template) => {
 		}
 	}
 
+	console.log("template compiler result", elStack.top());
 	return elStack.pop();
 }
 

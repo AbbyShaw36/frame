@@ -28,4 +28,4 @@ const myApp = new F({
 		}]
 	},
 	methods: {}
-})
+});

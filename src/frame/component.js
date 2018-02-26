@@ -5,49 +5,43 @@ import diffEl from './diffEl';
 import createEl from './createEl';
 
 class Component {
-	constructor(options={}) {
-		const data = this._data = options.data || {};
-		const methods = options.methods || {};
-		const template = options.template;
-		const props = options.props || {};
-		const addWatcher = true;
-		const vm = this;
-		const elOptions = templateCompiler(template);
-
-		console.log('template compiler result', elOptions);
+	constructor({template, data, methods, propsSetting}) {
+		this._template = templateCompiler(template);
+		this._data = data;
+		this._methods = methods;
+		this._propsSetting = propsSetting;
 
 		Object.keys(data).forEach((key) => this._proxyData(key));
+		Object.keys(methods).forEach((key) => this[key] = methods[key].bind(this));
 		observe(data);
+	}
+	render(props) {
+		const template = this._template;
+		const propsSetting = this._propsSetting;
+		
+		// checkProps(props, propsSetting);
 
-		Object.keys(methods).forEach((key) => {
-			if (this[key]) {
-				return;
-			}
-			this[key] = methods[key].bind(this);
-		});
+		if (props) {
+			Object.keys(props).forEach((key) => {
+				if (this[key]) {
+					return;
+				}
 
-		Object.keys(props).forEach((key) => this._proxyProps(key));
-		// observe(props);
+				this[key] = props[key];
+			});
+		}
 
-		this.$options = options;
-		this.$el = createEl(elOptions, vm, addWatcher);
-		console.log(this.$el);
+		this.$el = createEl(template, this, true);
+
+		console.log("component render result", this.$el);
+
+		return this.$el;
 	}
 	_proxyData(key) {
 		Object.defineProperty(this, key, {
 			enumberable: true,
 			get: () => this._data[key],
-			set: (newValue) => this._data[key] = newValue
-		});
-	}
-	_proxyProps(key) {
-		if (this[key]) {
-			return;
-		}
-
-		Object.defineProperty(this, key, {
-			enumberable: true,
-			get: () => this.$options.props[key]
+			set: (value) => this._data[key] = value
 		});
 	}
 	getter(exp) {
@@ -72,18 +66,15 @@ class Component {
 			res[expArr.shift()] = value;
 		}
 	}
-	render() {
-		return this.$el.render();
-	}
 	update() {
 		if (this.updateTimer) {
 			clearTimeout(this.updateTimer);
 		}
 
 		this.updateTimer = setTimeout(() => {
-			const template = this.$options.template;
+			const template = this.template;
 			const oldEl = this.$el;
-			const newEl = templateCompiler(template, this);
+			const newEl = createEl(template, this);
 
 			console.log(oldEl, newEl);
 			updateEl(diffEl(oldEl, newEl));

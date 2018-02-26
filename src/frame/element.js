@@ -28,7 +28,8 @@ class Element {
 
 		for (let child of children) {
 			let childEl;
-				console.log("child", child);
+
+			console.log(child);
 
 			if (child instanceof Element) {
 				childEl = child.render();
@@ -37,6 +38,8 @@ class Element {
 			} else {
 				childEl = document.createTextNode(child);
 			}
+
+				console.log("child", childEl);
 
 			node.appendChild(childEl);
 		}
