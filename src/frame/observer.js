@@ -1,7 +1,6 @@
 import Dep from "./dependency";
 
 const resetArrayProto = (arr, dep) => {
-	console.log("add array prototype", arr);
 	const methods = ['push', 'pop', 'shift', 'unshift', 'splice', 'sort', 'reverse'];
 
 	methods.forEach((method) => {
@@ -36,6 +35,8 @@ class Observer {
 		if (Array.isArray(value)) {
 			resetArrayProto(value, dep);
 		}
+
+		console.log("[create observe]", this);
 	}
 	defineReactive(data, key) {
 		const dep = this.dep;
@@ -47,16 +48,17 @@ class Observer {
 				const watcher = Dep.target;
 
 				if (watcher) {
-					console.log(watcher, key, dep);
 					watcher.addDep(dep);
+
+					Dep.target = null;
 				}
 
 				return _self.value;
 			},
 			set: (newValue) => {
-				console.log('value changed: ', _self.value, ' => ', newValue, data, dep);
 				_self.value = newValue;
 				dep.notify();
+				console.log('[change value]', _self.value, ' => ', newValue, data, dep);
 			}
 		});
 	}

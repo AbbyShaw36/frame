@@ -29,8 +29,6 @@ class Element {
 		for (let child of children) {
 			let childEl;
 
-			console.log(child);
-
 			if (child instanceof Element) {
 				childEl = child.render();
 			} else if (child instanceof HTMLElement) {
@@ -38,8 +36,6 @@ class Element {
 			} else {
 				childEl = document.createTextNode(child);
 			}
-
-				console.log("child", childEl);
 
 			node.appendChild(childEl);
 		}

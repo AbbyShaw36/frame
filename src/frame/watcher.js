@@ -4,6 +4,8 @@ class Watcher {
 		this.key = key;
 		this.cb = cb;
 		this.depList = {};
+
+		console.log("[create watcher]", this);
 	}
 	addDep(dep) {
 		if (this.depList[dep.id]) {
@@ -12,6 +14,8 @@ class Watcher {
 
 		this.depList[dep.id] = dep;
 		dep.addSub(this);
+
+		console.log("[watcher add dep]", this, "add", dep);
 	}
 	update() {
 		const context = this.vm;

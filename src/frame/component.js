@@ -12,10 +12,14 @@ class Component {
 		this._propsSetting = propsSetting;
 
 		Object.keys(data).forEach((key) => this._proxyData(key));
-		Object.keys(methods).forEach((key) => this[key] = methods[key].bind(this));
+		Object.keys(methods).forEach((key) => {
+			this[key] = methods[key].bind(this);
+		});
 		observe(data);
+
+		console.log("[create component]", this);
 	}
-	render(props) {
+	render(props, addWatcher) {
 		const template = this._template;
 		const propsSetting = this._propsSetting;
 		
@@ -31,9 +35,9 @@ class Component {
 			});
 		}
 
-		this.$el = createEl(template, this, true);
+		this.$el = createEl(template, this, addWatcher);
 
-		console.log("component render result", this.$el);
+		console.log("[component render]", this.$el);
 
 		return this.$el;
 	}
@@ -43,6 +47,8 @@ class Component {
 			get: () => this._data[key],
 			set: (value) => this._data[key] = value
 		});
+
+		console.log("[proxy data]", key);
 	}
 	getter(exp) {
 		const expArr = exp.split(".");
@@ -51,6 +57,8 @@ class Component {
 		while(res && expArr.length) {
 			res = res[expArr.shift()];
 		}
+
+		console.log("[get]", exp, ":", res);
 
 		return res;
 	}
@@ -65,6 +73,8 @@ class Component {
 		if (res) {
 			res[expArr.shift()] = value;
 		}
+
+		console.log("[set]", exp, ":", value);
 	}
 	update() {
 		if (this.updateTimer) {
@@ -72,14 +82,15 @@ class Component {
 		}
 
 		this.updateTimer = setTimeout(() => {
-			const template = this.template;
+			const template = this._template;
+			const addWatcher = false;
 			const oldEl = this.$el;
-			const newEl = createEl(template, this);
+			const newEl = createEl(template, this, addWatcher);
+			const diff = diffEl(oldEl, newEl);
 
-			console.log(oldEl, newEl);
-			updateEl(diffEl(oldEl, newEl));
-
+			updateEl(diff);
 			this.updateTimer = null;
+			console.log("[update vm]", oldEl, "=>", newEl, ":", diff);
 		}, 200);
 	}
 }

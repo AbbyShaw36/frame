@@ -15,7 +15,6 @@ const getComponent = (name) => {
 }
 
 const replaceMatchWithContext = (context, match) => {
-	console.log("==========", context);
 	context.forEach((contextItem) => {
 		match = match.replace(contextItem.old, () => contextItem.new);
 	});
@@ -62,7 +61,6 @@ const create = (options, vm, addWatcher, ...context) => {
 		events[eventType] = eventHandler;
 	});
 
-	console.log(children, context);
 	for (let index=0, len = children.length; index < len; index++) {
 		const child = children[index];
 
@@ -92,7 +90,7 @@ const create = (options, vm, addWatcher, ...context) => {
 		}
 	}
 
-	if (model) {
+	if (model && addWatcher) {
 		const key = model.key.replace(modelRegexp, (match, $1) => {
 			$1 = replaceMatchWithContext(context, $1);
 
@@ -113,7 +111,7 @@ const create = (options, vm, addWatcher, ...context) => {
 
 	if (isCpn) {
 		const cpn = getComponent(tagName);
-		el = cpn.render(props);
+		el = cpn.render(props, addWatcher);
 	} else {
 		el = new El({tagName, attrs, events, model, children});
 	}
@@ -121,19 +119,21 @@ const create = (options, vm, addWatcher, ...context) => {
 	return el;
 }
 
-const createEl = (options, vm, addWatcher, ...context) => {
-	const { tagName, attrs, children, events, model, cycle } = options;
+const cloneOptions = (options) => {
+	return JSON.parse(JSON.stringify(options));
+}
 
-	console.log('begin to create element', tagName, cycle);
+const createEl = (options, vm, addWatcher, ...context) => {
+	const newOptions = cloneOptions(options);
+	const {tagName, cycle} = newOptions;
 
 	if (cycle) {
 		const list = vm.getter(cycle.listName);
 		const elList = [];
 
 		for (let item in list) {
-			const copyOptions = JSON.parse(JSON.stringify(options));
 			const value = cycle.listName + '.' + item
-			const el = create(copyOptions, vm, addWatcher, ...context, {
+			const el = create(cloneOptions(options), vm, addWatcher, ...context, {
 				old: cycle.itemName,
 				new: value
 			});
@@ -144,7 +144,8 @@ const createEl = (options, vm, addWatcher, ...context) => {
 		return elList;
 	}
 
-	return create(options, vm, addWatcher, ...context);
+	console.log("[to create element]", newOptions);
+	return create(newOptions, vm, addWatcher, ...context);
 }
 
 export default createEl;

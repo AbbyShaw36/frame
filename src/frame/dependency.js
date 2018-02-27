@@ -4,16 +4,17 @@ class Dep {
 	constructor() {
 		this.subs = [];
 		this.id = id++;
+		console.log("[create dep]", this);
 	}
 	addSub(sub) {
-		console.log('add sub', sub);
 		this.subs.push(sub);
+		console.log('[dep add sub]', this, "add", sub);
 	}
 	notify() {
 		this.subs.forEach((sub) => {
 			sub.update();
-			console.log(sub);
 		});
+		console.log("[dep notify]", this);
 	}
 }
 

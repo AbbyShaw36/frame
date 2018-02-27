@@ -128,7 +128,6 @@ const diffChildren = (oldEl, newEl, patches) => {
 const diffElement = (oldEl, newEl) => {
 	const patches = [];
 	dfsWalk(oldEl, newEl, patches);
-	console.log(patches);
 	return patches;
 }
 

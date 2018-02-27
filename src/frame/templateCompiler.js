@@ -16,7 +16,7 @@ const getTemplateElement = (template) => {
 
 	// 删除最后一个无意义空字符串
 	strings.pop();
-	console.log("split template element result:", tags, strings);
+	console.log("[split template element result]", tags, strings);
 
 	return {tags, strings};
 }
@@ -27,10 +27,10 @@ class ElStack {
 	}
 	push(el) {
 		this.stack.push(el);
-		console.log('push element', el);
+		console.log('[push element]', el);
 	}
 	pop() {
-		console.log('pop element', this.top());
+		console.log('[pop element]', this.top());
 		return this.stack.pop();
 	}
 	top() {
@@ -80,22 +80,24 @@ const templateCompiler = (template) => {
 		let cycle = null;
 
 		if (isText) {
-			console.log('is text', str);
+			console.log('[is text]', str);
 			elAddChild(elStack, str);
 		}
 
 		// 闭合标签，例如：</div>
 		if (isEndTag(tagName)) {
-			console.log("is end tag", tagName);
+			console.log("[is end tag]", tagName);
 			closeTag(elStack);
 			continue;
 		}
+		console.log("[tag attrs]", tagAttrs);
 
 		// 针对自闭和标签，例如：<input />
 		if (hasEndTag) {
-			console.log("has end tag");
-			tagAttrs.pop();
+			console.log("[has end tag]");
 		}
+
+		console.log("[tag attrs]", tagAttrs);
 
 		// 区分事件或属性
 		for (let item of tagAttrs) {
@@ -103,8 +105,6 @@ const templateCompiler = (template) => {
 			const attrName = attr[0];
 			const attrValue = attr[1].replace(/"|'/g, '');
 			const isEvent = /^@/.test(attrName);
-
-			console.log("tag attribute", attrName, attrValue);
 
 			if (isEvent) {
 				const eventType = attrName.replace(/@/, '');
@@ -140,7 +140,7 @@ const templateCompiler = (template) => {
 		}
 	}
 
-	console.log("template compiler result", elStack.top());
+	console.log("[template compiler result]", elStack.top());
 	return elStack.pop();
 }
 

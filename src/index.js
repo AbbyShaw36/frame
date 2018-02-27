@@ -15,6 +15,11 @@ const myApp = new F({
 	selector: '#app',
 	template: `
 		<div>
+			<div>
+				<input type="text" @model="newItem" />
+				<button @click="addItem">add item</button>
+			</div>
+			<div>new item value: {{newItem}}</div>
 			<myList list="{{list}}"></myList>
 		</div>
 	`,
@@ -25,7 +30,16 @@ const myApp = new F({
 			value: 2
 		}, {
 			value: 3
-		}]
+		}],
+		newItem: ""
 	},
-	methods: {}
+	methods: {
+		addItem() {
+			this.list.push({
+				value: this.newItem
+			});
+
+			this.newItem = "";
+		}
+	}
 });

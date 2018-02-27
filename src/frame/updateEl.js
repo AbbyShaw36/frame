@@ -4,26 +4,22 @@ const updateElement = (patches) => {
 	for (let patch of patches) {
 		switch(patch.type) {
 			case 'node.replace':
-				patch.oldEl.node.replaceWith(patch.newEl.render());
+				patch.oldEl.replace(patch.newEl);
 				break;
 			case 'props.remove':
-				patch.el.node.removeAttribute(patch.propKey);
+				patch.el.removeAttr(patch.propKey);
 				break;
 			case 'props.update':
-				patch.el.node.setAttribute(patch.propKey, patch.propValue);
+				patch.el.setAttr(patch.propKey, patch.propValue);
 				break;
 			case 'child.update':
-				const childNode = isString(patch.child) ? patch.child : patch.child.node;
-				patch.el.node.childNodes[patch.childIndex].replaceWith(childNode);
+				patch.el.replaceChild(patch.child, patch.childIndex);
 				break;
 			case 'child.remove':
-				patch.el.node.childNodes[patch.childIndex].remove();
+				patch.el.removeChild(patch.childIndex);
 				break;
 			case 'child.add':
-				const parent = patch.el.node;
-				const referenceNode = parent.childNodes[patch.childIndex];
-				const newNode = isString(patch.child) ? document.createTextNode(patch.child) : patch.child.render();
-				parent.insertBefore(newNode, referenceNode);
+				patch.el.addChild(patch.child, patch.childIndex);
 				break;
 		}
 	}
